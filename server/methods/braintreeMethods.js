@@ -1,6 +1,6 @@
 import { check } from "meteor/check";
 import { BraintreeApi } from "./braintreeApi";
-import { Logger } from "/server/api";
+import Logger from "@reactioncommerce/logger";
 import { PaymentMethodArgument } from "/lib/collections/schemas";
 
 /**

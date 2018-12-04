@@ -4,7 +4,9 @@ import { Template } from "meteor/templating";
 import { AutoForm } from "meteor/aldeed:autoform";
 import { $ } from "meteor/jquery";
 import { getCardType } from "/client/modules/core/helpers/globals";
-import { Cart, Shops, Packages } from "/lib/collections";
+import { Shops, Packages } from "/lib/collections";
+import getCart from "/imports/plugins/core/cart/client/util/getCart";
+import { unstoreAnonymousCart } from "/imports/plugins/core/cart/client/util/anonymousCarts";
 import { Braintree } from "../api/braintree";
 import { Reaction } from "/client/api";
 import { BraintreePayment } from "../../lib/collections/schemas";
@@ -54,12 +56,11 @@ function submitToBrainTree(doc, template) {
     cvv2: doc.cvv,
     type: getCardType(doc.cardNumber)
   };
-  const cartTotal = Cart.findOne().getTotal();
-  const currencyCode = Shops.findOne().currency;
+  const { cart, token: cartToken } = getCart();
 
   Braintree.authorize(cardData, {
-    total: cartTotal,
-    currency: currencyCode
+    total: cart.getTotal(),
+    currency: Shops.findOne().currency
   }, (error, results) => {
     let paymentMethod;
     submitting = false;
@@ -75,7 +76,7 @@ function submitToBrainTree(doc, template) {
         name: "reaction-braintree",
         shopId: Reaction.getShopId()
       });
-
+      
       const storedCard = `${tx.creditCard.cardType.toUpperCase()} ${tx.creditCard.last4}`;
       paymentMethod = {
         processor: "Braintree",
@@ -92,7 +93,21 @@ function submitToBrainTree(doc, template) {
         transactions: []
       };
       paymentMethod.transactions.push(results.response);
-      Meteor.call("cart/submitPayment", paymentMethod);
+      Meteor.call("cart/submitPayment", cart._id, cartToken, paymentMethod, (err) => {
+        if (err) {
+          Logger.error(err);
+          return;
+        }
+
+        // If there wasn't an error, the cart has been deleted.
+        if (cartToken) {
+          unstoreAnonymousCart(cart._id);
+        }
+
+        Router.go("cart/completed", {}, {
+          _id: cart._id
+        });
+      });
     } else {
       handleBraintreeSubmitError(results.response.message);
       uiEnd(template, "Resubmit payment");
