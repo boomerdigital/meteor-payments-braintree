@@ -1,5 +1,6 @@
 /* eslint camelcase: 0 */
 import Reaction from "/imports/plugins/core/core/server/Reaction";
+import schemas from "./server/no-meteor/schemas";
 import {
   paymentSubmit,
   paymentCapture,
@@ -11,6 +12,9 @@ Reaction.registerPackage({
   label: "BrainTree",
   icon: "fa fa-credit-card",
   autoEnable: true,
+  graphQL: {
+    schemas
+  },
   name: "reaction-braintree", // usually same as meteor package
   // private package settings config (blackbox)
   settings: {
