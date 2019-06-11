@@ -8,30 +8,23 @@ import { PaymentMethodArgument } from "/lib/collections/schemas";
  * @method
  * @memberof Payment/Braintree/Methods
  * @summary Authorize, or authorize and capture payments from Braintree {@link https://developers.braintreepayments.com/reference/request/transaction/sale/node}
- * @param {String} transactionType - either authorize or capture
- * @param {Object} cardData - Object containing everything about the Credit card to be submitted
- * @param {Object} paymentData - Object containing everything about the transaction to be settled
+ * @param {Object} context The request context
+ * @param {Object} input Input necessary to create a payment
  * @return {Object} results - Object containing the results of the transaction
  */
-export function paymentSubmit(transactionType, cardData, paymentData) {
-  check(transactionType, String);
-  check(cardData, {
-    name: String,
-    number: String,
-    expirationMonth: String,
-    expirationYear: String,
-    cvv2: String,
-    type: String
-  });
-  check(paymentData, {
-    total: String,
-    currency: String
-  });
+export function paymentSubmit(context, input) {
+  const {
+    amount,
+    paymentData: {
+      nonceToken
+    }
+  } = input;
 
   const paymentSubmitDetails = {
-    transactionType,
-    cardData,
-    paymentData
+    amount: Number(amount),
+    paymentData: {
+      nonceToken
+    }
   };
 
   let result;

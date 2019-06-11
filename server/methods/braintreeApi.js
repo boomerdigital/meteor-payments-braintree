@@ -14,28 +14,8 @@ async function lazyLoadMoment() {
   moment = await import("moment");
 }
 
-
 export const BraintreeApi = {};
 BraintreeApi.apiCall = {};
-
-
-function getPaymentObj() {
-  return {
-    amount: "",
-    options: { submitForSettlement: true }
-  };
-}
-
-function parseCardData(data) {
-  return {
-    cardholderName: data.name,
-    number: data.number,
-    expirationMonth: data.expirationMonth,
-    expirationYear: data.expirationYear,
-    cvv: data.cvv
-  };
-}
-
 
 function getSettings(settings, ref, valueName) {
   if (settings !== null) {
@@ -99,34 +79,39 @@ function getRefundDetails(refundId) {
 BraintreeApi.apiCall.paymentSubmit = function (paymentSubmitDetails) {
   const isNewPayment = true;
   const gateway = getGateway(isNewPayment);
-  const paymentObj = getPaymentObj();
-  if (paymentSubmitDetails.transactionType === "authorize") {
-    paymentObj.options.submitForSettlement = false;
-  }
-  paymentObj.creditCard = parseCardData(paymentSubmitDetails.cardData);
-  paymentObj.amount = paymentSubmitDetails.paymentData.total;
   const fut = new Future();
-  gateway.transaction.sale(paymentObj, Meteor.bindEnvironment((error, result) => {
-    if (error) {
-      fut.return({
-        saved: false,
-        error
-      });
-    } else if (!result.success) {
-      fut.return({
-        saved: false,
-        response: result
-      });
-    } else {
-      fut.return({
-        saved: true,
-        response: result
-      });
-    }
-  }, (error) => {
-    Reaction.Events.warn(error);
-  }));
 
+  gateway.transaction.sale(
+    {
+      amount: paymentSubmitDetails.amount,
+      paymentMethodNonce: paymentSubmitDetails.paymentData.nonceToken,
+      options: {
+        // This option requests the funds from the transaction
+        // once it has been authorized successfully
+        submitForSettlement: true
+      }
+    },
+    function(error, result) {
+      if (error) {
+        Reaction.Events.warn(error);
+        fut.return({
+          saved: false,
+          error
+        });
+      }
+      else if(!result.success){
+        fut.return({
+          saved: false,
+          response: result
+        });
+      } else {
+        fut.return({
+          saved: true,
+          response: result
+        });
+      }
+    }
+  );
   return fut.wait();
 };
 
