@@ -15,6 +15,8 @@ import { PaymentMethodArgument } from "/lib/collections/schemas";
 export function paymentSubmit(context, input) {
   const {
     amount,
+    billingAddress,
+    shopId,
     paymentData: {
       nonceToken
     }
@@ -22,6 +24,8 @@ export function paymentSubmit(context, input) {
 
   const paymentSubmitDetails = {
     amount: Number(amount),
+    billingAddress,
+    shopId,
     paymentData: {
       nonceToken
     }

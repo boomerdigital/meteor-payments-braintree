@@ -7,6 +7,15 @@ import { check } from "meteor/check";
 import { Packages } from "/lib/collections";
 import Logger from "@reactioncommerce/logger";
 import Reaction from "/imports/plugins/core/core/server/Reaction";
+import Random from "@reactioncommerce/random";
+
+const METHOD = "credit";
+const PACKAGE_NAME = "reaction-braintree";
+const PAYMENT_METHOD_NAME = "braintree_card";
+
+// NOTE: The "processor" value is lowercased and then prefixed to various payment Meteor method names,
+// so for example, if this is "Braintree", the list refunds method is expected to be named "braintree/refund/list"
+const PROCESSOR = "Braintree";
 
 let moment;
 async function lazyLoadMoment() {
@@ -81,10 +90,12 @@ BraintreeApi.apiCall.paymentSubmit = function (paymentSubmitDetails) {
   const gateway = getGateway(isNewPayment);
   const fut = new Future();
 
+  const { amount, billingAddress, shopId, paymentData: { nonceToken }} = paymentSubmitDetails
+
   gateway.transaction.sale(
     {
-      amount: paymentSubmitDetails.amount,
-      paymentMethodNonce: paymentSubmitDetails.paymentData.nonceToken,
+      amount,
+      paymentMethodNonce: nonceToken,
       options: {
         // This option requests the funds from the transaction
         // once it has been authorized successfully
@@ -98,17 +109,35 @@ BraintreeApi.apiCall.paymentSubmit = function (paymentSubmitDetails) {
           saved: false,
           error
         });
-      }
-      else if(!result.success){
+      } else if (!result.success) {
         fut.return({
           saved: false,
           response: result
         });
       } else {
-        fut.return({
-          saved: true,
-          response: result
-        });
+        fut.return(
+          {
+            _id: Random.id(),
+            address: billingAddress,
+            amount,
+            createdAt: new Date(),
+            data: {
+              nonceToken,
+              gqlType: "BraintreeCardPaymentData" // GraphQL union resolver uses this
+            },
+            displayName: `Braintree payment`,
+            method: METHOD,
+            mode: "authorize",
+            name: PAYMENT_METHOD_NAME,
+            paymentPluginName: PACKAGE_NAME,
+            processor: PROCESSOR,
+            riskLevel: "normal",
+            shopId,
+            status: "created",
+            transactionId: Random.id(),
+            transactions: []
+          }
+        )
       }
     }
   );
