@@ -227,22 +227,29 @@ BraintreeApi.apiCall.createRefund = function (refundDetails) {
 BraintreeApi.apiCall.listRefunds = function (refundListDetails) {
   const { transactionId } = refundListDetails;
   const gateway = getGateway();
-  const braintreeFind = Meteor.wrapAsync(gateway.transaction.find, gateway.transaction);
-  const findResults = braintreeFind(transactionId);
-  const result = [];
-  if (findResults.refundIds.length > 0) {
-    Promise.await(lazyLoadMoment());
-    for (const refund of findResults.refundIds) {
-      const refundDetails = getRefundDetails(refund);
-      result.push({
-        type: "refund",
-        amount: parseFloat(refundDetails.amount),
-        created: moment(refundDetails.createdAt).unix() * 1000,
-        currency: refundDetails.currencyIsoCode,
-        raw: refundDetails
-      });
+  try {
+    const braintreeFind = Meteor.wrapAsync(gateway.transaction.find, gateway.transaction);
+    const findResults = braintreeFind(transactionId);
+    const result = [];
+    if (findResults.refundIds.length > 0) {
+      Promise.await(lazyLoadMoment());
+      for (const refund of findResults.refundIds) {
+        const refundDetails = getRefundDetails(refund);
+        result.push({
+          type: "refund",
+          amount: parseFloat(refundDetails.amount),
+          created: moment(refundDetails.createdAt).unix() * 1000,
+          currency: refundDetails.currencyIsoCode,
+          raw: refundDetails
+        });
+      }
+    }
+
+    return result;
+  } catch (error) {
+    if (error.name === "notFoundError") {
+      return []
     }
   }
 
-  return result;
 };

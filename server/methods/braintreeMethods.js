@@ -137,7 +137,7 @@ export function createRefund(paymentMethod, amount) {
  * @param {Object} paymentMethod - Object containing everything about the transaction to be settled
  * @return {Array} results - An array of refund objects for display in admin
  */
-export function listRefunds(paymentMethod) {
+export function listRefunds(context, paymentMethod) {
   check(paymentMethod, Object);
 
   const refundListDetails = {
