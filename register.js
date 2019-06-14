@@ -29,6 +29,7 @@ Reaction.registerPackage({
   },
   paymentMethods: [
     {
+      canRefund: true,
       name: "braintree_card",
       displayName: "Braintree Card",
       functions: {

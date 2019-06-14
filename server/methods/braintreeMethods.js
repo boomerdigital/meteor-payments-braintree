@@ -55,13 +55,14 @@ export function paymentSubmit(context, input) {
  * @method
  * @memberof Payment/Braintree/Methods
  * @summary Capture payments from Braintree {@link https://developers.braintreepayments.com/reference/request/transaction/submit-for-settlement/node}
+ * @param {Object} context The request context
  * @param {Object} paymentMethod - Object containing everything about the transaction to be settled
  * @return {Object} results - Object containing the results of the transaction
  */
 export function paymentCapture(context, paymentMethod) {
   // Call both check and validate because by calling `clean`, the audit pkg
   // thinks that we haven't checked paymentMethod arg
-  // check(paymentMethod, Object);
+  check(paymentMethod, Object);
   // PaymentMethodArgument.validate(PaymentMethodArgument.clean(paymentMethod));
 
   const paymentCaptureDetails = {
@@ -93,17 +94,18 @@ export function paymentCapture(context, paymentMethod) {
  * @method
  * @memberof Payment/Braintree/Methods
  * @summary Refund BrainTree payment {@link https://developers.braintreepayments.com/reference/request/transaction/refund/node}
+ * @param {Object} context The request context
  * @param {Object} paymentMethod - Object containing everything about the transaction to be settled
  * @param {Number} amount - Amount to be refunded if not the entire amount
  * @return {Object} results - Object containing the results of the transaction
  */
-export function createRefund(paymentMethod, amount) {
+export function createRefund(context, paymentMethod, amount) {
   check(amount, Number);
 
   // Call both check and validate because by calling `clean`, the audit pkg
   // thinks that we haven't checked paymentMethod arg
   check(paymentMethod, Object);
-  PaymentMethodArgument.validate(PaymentMethodArgument.clean(paymentMethod));
+  // PaymentMethodArgument.validate(PaymentMethodArgument.clean(paymentMethod));
 
   const refundDetails = {
     transactionId: paymentMethod.transactionId,

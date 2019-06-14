@@ -17,12 +17,6 @@ const PAYMENT_METHOD_NAME = "braintree_card";
 // so for example, if this is "Braintree", the list refunds method is expected to be named "braintree/refund/list"
 const PROCESSOR = "Braintree";
 
-let moment;
-async function lazyLoadMoment() {
-  if (moment) return;
-  moment = await import("moment");
-}
-
 export const BraintreeApi = {};
 BraintreeApi.apiCall = {};
 
@@ -232,13 +226,12 @@ BraintreeApi.apiCall.listRefunds = function (refundListDetails) {
     const findResults = braintreeFind(transactionId);
     const result = [];
     if (findResults.refundIds.length > 0) {
-      Promise.await(lazyLoadMoment());
       for (const refund of findResults.refundIds) {
         const refundDetails = getRefundDetails(refund);
         result.push({
           type: "refund",
           amount: parseFloat(refundDetails.amount),
-          created: moment(refundDetails.createdAt).unix() * 1000,
+          created: new Date(refundDetails.createdAt).getTime() / 1000,
           currency: refundDetails.currencyIsoCode,
           raw: refundDetails
         });
