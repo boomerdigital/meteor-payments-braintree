@@ -58,11 +58,11 @@ export function paymentSubmit(context, input) {
  * @param {Object} paymentMethod - Object containing everything about the transaction to be settled
  * @return {Object} results - Object containing the results of the transaction
  */
-export function paymentCapture(paymentMethod) {
+export function paymentCapture(context, paymentMethod) {
   // Call both check and validate because by calling `clean`, the audit pkg
   // thinks that we haven't checked paymentMethod arg
-  check(paymentMethod, Object);
-  PaymentMethodArgument.validate(PaymentMethodArgument.clean(paymentMethod));
+  // check(paymentMethod, Object);
+  // PaymentMethodArgument.validate(PaymentMethodArgument.clean(paymentMethod));
 
   const paymentCaptureDetails = {
     transactionId: paymentMethod.transactionId,

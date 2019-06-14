@@ -99,7 +99,7 @@ BraintreeApi.apiCall.paymentSubmit = function (paymentSubmitDetails) {
       options: {
         // This option requests the funds from the transaction
         // once it has been authorized successfully
-        submitForSettlement: true
+        submitForSettlement: false
       }
     },
     function(error, result) {
@@ -125,7 +125,7 @@ BraintreeApi.apiCall.paymentSubmit = function (paymentSubmitDetails) {
               nonceToken,
               gqlType: "BraintreeCardPaymentData" // GraphQL union resolver uses this
             },
-            displayName: `Braintree payment`,
+            displayName: `${result.transaction.creditCard.cardType} ${result.transaction.creditCard.last4}`,
             method: METHOD,
             mode: "authorize",
             name: PAYMENT_METHOD_NAME,
@@ -134,8 +134,8 @@ BraintreeApi.apiCall.paymentSubmit = function (paymentSubmitDetails) {
             riskLevel: "normal",
             shopId,
             status: "created",
-            transactionId: Random.id(),
-            transactions: []
+            transactionId: result.transaction.id,
+            transactions: [result.transaction]
           }
         )
       }
